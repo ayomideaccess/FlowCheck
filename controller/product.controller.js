@@ -57,12 +57,12 @@ const updateProduct = async(req, res) => {
         const { productId } = req.params;
         const { name, unitPrice, costPrice, currentStock, reorderLevel, unit, categoryId } = req.body;
 
-        const targetProduct = await User.findOne({ _id: productId, businessId: req.user.businessId });
+        const targetProduct = await Product.findOne({ _id: productId, businessId: req.user.businessId });
         if (!targetProduct){
             return res.status(404).json({ message: "Not found" })
         }
 
-        const product = await Product.findByIdAndUpdate(userId, req.body, { new: true, runValidators: true });
+        const product = await Product.findByIdAndUpdate(productId, req.body, { new: true, runValidators: true });
         res.status(200).json({message: "Product updated successfully.",
             product: {
                 id: product._id,

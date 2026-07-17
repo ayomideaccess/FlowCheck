@@ -34,7 +34,7 @@ const updateCategory = async(req, res)=>{
         const { categoryId } = req.params;
         const { name, description } = req.body;
 
-        const targetCategory = await User.findOne({ _id:categoryId, businessId: req.user.businessId });
+        const targetCategory = await Category.findOne({ _id:categoryId, businessId: req.user.businessId });
         if (!targetCategory){
             return res.status(404).json({ message: "Not found" })
         }

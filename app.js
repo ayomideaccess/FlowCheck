@@ -8,6 +8,7 @@ import authRoutes from './routes/auth.routes.js';
 import userRoutes from './routes/user.routes.js';
 import categoryRoutes from './routes/category.routes.js';
 import productRoutes from './routes/product.routes.js';
+import suppliersRoutes from './routes/supplier.routes.js';
 
 const app = express();
 
@@ -36,3 +37,4 @@ app.use('/auth', authRoutes);
 app.use('/', userRoutes);
 app.use('/', categoryRoutes);
 app.use('/products', productRoutes);
+app.use('/suppliers', suppliersRoutes);
