@@ -11,6 +11,7 @@ import productRoutes from './routes/product.routes.js';
 import suppliersRoutes from './routes/supplier.routes.js';
 import transactionRoutes from './routes/inventory-transaction.routes.js';
 import salesRoutes from './routes/sales.routes.js';
+import reportRoutes from './routes/report.routes.js';
 
 const app = express();
 
@@ -42,3 +43,4 @@ app.use('/products', productRoutes);
 app.use('/suppliers', suppliersRoutes);
 app.use('/transactions', transactionRoutes);
 app.use('/sales', salesRoutes);
+app.use('/reports', reportRoutes);
