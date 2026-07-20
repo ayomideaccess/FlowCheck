@@ -2,6 +2,7 @@ import Buiness from '../models/business.model.js';
 import Product from '../models/product.model.js';
 import Sale from '../models/sales.model.js';
 import SaleItem from '../models/saleItem.model.js';
+import { checkAndUpdateLowStockAlert } from '../services/alert.service.js';
 
 const createSale = async (req, res) => {
     const session = await mongoose.startSession();
@@ -64,6 +65,7 @@ const createSale = async (req, res) => {
             { $inc: { currentStock: -item.quantity } },
             { session }
         );
+        await checkAndUpdateLowStockAlert(item.productId, businessId, session);
         }
         await session.commitTransaction();
         session.endSession();

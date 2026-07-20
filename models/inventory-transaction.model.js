@@ -39,6 +39,9 @@ const transactionSchema = new Schema({
     },
     note: {
         type: String
+    },
+    adjustmentType: {
+        type: String
     }
 }, { timestamps: true })
 

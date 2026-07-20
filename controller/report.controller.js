@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import Alert from '../models/alert.model.js';
+import Product from '../models/product.model.js';
 
 const getLowStock = async (req, res) => {
     try {

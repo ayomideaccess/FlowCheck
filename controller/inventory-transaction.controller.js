@@ -3,6 +3,7 @@ import Business from '../models/business.model.js';
 import Product from '../models/product.model.js';
 import Supplier from '../models/supplier.model.js';
 import Inventory from '../models/inventory-transaction.model.js';
+import { checkAndUpdateLowStockAlert } from '../services/alert.service.js';
 
 const addStockIn = async(req,res) => {
     try {
@@ -11,6 +12,7 @@ const addStockIn = async(req,res) => {
             return res.status(400).json({ message: "All fields are required" });
         }
         const businessId = req.user.businessId;
+        const performedBy = req.user.userId;
         const type = "stock_in";
         const newStock = await Inventory.create({
             businessId: businessId,
@@ -22,6 +24,8 @@ const addStockIn = async(req,res) => {
             performedBy,
             note
         });
+        await Product.findByIdAndUpdate(productId, { $inc: { currentStock: quantity } });
+        await checkAndUpdateLowStockAlert(productId, businessId);
         res.status(201).json({ message: "Stock added successsfully", newStock });
     } catch (error) {
         res.status(500).json({ message: "Error adding stock-in", error: error.message });
@@ -30,9 +34,12 @@ const addStockIn = async(req,res) => {
 
 const adjustInventory = async(req,res) => {
     try {
-        const { productId, supplierId, quantity, unitCost, note } = req.body;
+        const { productId, supplierId, quantity, unitCost, note, adjustmentType } = req.body;
         if (!productId || !supplierId || !quantity || !unitCost || !note) {
             return res.status(400).json({ message: "All fields are required" });
+        }
+        if (adjustmentType!== "increase" && adjustmentType!== "decrease") {
+            return res.status(400).json({ message: "adjustmentType must be either 'increase' or 'decrease'" });
         }
         const businessId = req.user.businessId;
         const type = "adjustment";
@@ -44,8 +51,14 @@ const adjustInventory = async(req,res) => {
             quantity,
             unitCost,
             performedBy,
-            note
+            note,
+            adjustmentType
         });
+
+        const stockChange = adjustmentType === "increase" ? quantity: -quantity;
+        await Product.findByIdAndUpdate(productId, { $inc: { currentStock: stockChange } });
+
+        await checkAndUpdateLowStockAlert(productId, businessId);
         res.status(201).json({ message: "Adjustment made successsfully", newStock });
     } catch (error) {
         res.status(500).json({ message: "Error making adjustment", error: error.message });
