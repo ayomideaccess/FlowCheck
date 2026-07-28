@@ -12,6 +12,9 @@ import suppliersRoutes from './routes/supplier.routes.js';
 import transactionRoutes from './routes/inventory-transaction.routes.js';
 import salesRoutes from './routes/sales.routes.js';
 import reportRoutes from './routes/report.routes.js';
+import errorHandler from './middleware/errorHandler.js';
+import routeHandler from './middleware/routeHandler.js';
+import { swaggerUi, swaggerSpec } from './config/swagger.js';
 
 const app = express();
 
@@ -36,6 +39,8 @@ const startConnection = async () => {
 }
 startConnection();
 
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
 app.use('/auth', authRoutes);
 app.use('/', userRoutes);
 app.use('/', categoryRoutes);
@@ -44,3 +49,7 @@ app.use('/suppliers', suppliersRoutes);
 app.use('/transactions', transactionRoutes);
 app.use('/sales', salesRoutes);
 app.use('/reports', reportRoutes);
+
+app.use(routeHandler);
+
+app.use(errorHandler);

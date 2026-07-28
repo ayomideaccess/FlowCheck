@@ -6,6 +6,7 @@ import generateToken from '../utils/generateToken.js';
 import User from '../models/user.model.js';
 import Business from '../models/business.model.js';
 import mongoose from 'mongoose';
+import AppError from '../utils/AppError.js';
 
 const registerBusinessOwner = async (req, res) => {
     const { 
@@ -20,8 +21,8 @@ const registerBusinessOwner = async (req, res) => {
         password 
     } = req.body;
 
-    if (!businessName || businessAddress || businessPhoneNo || businessEmail || !firstName || !lastName || !email || !phoneNo || !password){
-        return res.status(400).json({ message: "All fields are required" });
+    if (!businessName || !businessAddress || !businessPhoneNo || !businessEmail || !firstName || !lastName || !email || !phoneNo || !password){
+        throw new AppError("All fields are required",400);
     }
 
     const session = await mongoose.startSession();
@@ -82,28 +83,27 @@ const registerBusinessOwner = async (req, res) => {
         session.endSession();
 
         if (error.code === 11000){
-            return res.status(409).json({ message: "Email already in use." });
+            throw new AppError("Email already in use.", 409);
         }
-        return res.status(500).json({ message: "Registration failed", error: error.message });
+        throw new AppError("Registration failed", 500);
     }
 };
 
 //VERIFY OTP
 const verifyOTP = async(req, res) => {
-    try{
         const { businessId, email, otp } = req.body;
 
         const user = await User.findOne({businessId, email});
         if (!user){
-            return res.status(400).json({message: "User not found"});
+            throw new AppError("User not found", 404);
         }
 
         if (user.otp !== otp){
-            return res.status(400).json({message: "Invalid OTP"});
+            throw new AppError("Invalid OTP",400);
         }
 
         if (user.otpExpiry < new Date()){
-            return res.status(400).json({message: "OTP has expired"});
+            throw new AppError("OTP has expired", 400);
         }
 
         user.isVerified = true;
@@ -112,24 +112,22 @@ const verifyOTP = async(req, res) => {
         await user.save();
 
         res.status(200).json({message: "Email verified successfully. You can now log in."});
-    } catch(error){
-        res.status(500).json({message: "Internal server error", error: error.message});
     }
-}
 
-const loginUser = async(req, res) => {
-    try {
+const loginOwner = async(req, res) =>{
         const { businessId, email, password } = req.body;
 
-        if (!email || !password) {
-            return res.status(400).json({ message: "Email and password are required" })
+        // if (!email || !password) {
+        //     return res.status(400).json({ message: "Email and password are required" })
+        // }
+        if (req.user.role !== "owner") {
+            throw new AppError("You cannot login as the owner",400);
         }
-
         if (!businessId){
             const matches = await User.find({email}).select("businessId role").populate("businessId", "businessName");
 
             if (matches.length === 0){
-                return res.status(400).json({ message: "Invalid email or password." });
+                throw new AppError("Invalid credentials", 400);
             }
             if (matches.length > 1) {
                 return res.status(300).json({
@@ -146,41 +144,81 @@ const loginUser = async(req, res) => {
         const user = await User.findOne({businessId, email});
 
         if(!user){
-            return res.status(400).json({message: "User not found"});
+            throw new AppError("User not found",404);
         }
         if(!user.isVerified){
-            return res.status(400).json({message: "Email not verified. Please verify your email first."});
+            throw new AppError("Email not verified. Please verify your email first.",400);
         }
 
         const isMatch = await bcrypt.compare(password, user.password);
         if(!isMatch){
-            return res.status(400).json({message: "Invalid credentials"});
+            throw new AppError("Invalid credentials",400);
         }
 
         const token = generateToken(user._id, user.businessId, user.role);
 
         await sendLoginEmail(email, user.firstName);
         res.status(200).json({message: "Login successful", token});
+}
 
-    } catch (error) {
-        res.status(500).json({message: "Internal server error", error: error.message});
-    }
+const loginUser = async(req, res) => {
+        const { businessId, email } = req.body;
+
+        if (!email) {
+            throw new AppError("Email is required",400)
+        }
+
+        if (req.user.role === "owner") {
+            throw new AppError("You need to login as the owner",400);
+        }
+
+        if (!businessId){
+            const matches = await User.find({email}).select("businessId role").populate("businessId", "businessName");
+
+            if (matches.length === 0){
+                throw new AppError("Invalid email",400);
+            }
+            if (matches.length > 1) {
+                return res.status(300).json({
+                    message: "Multiple businesses found for this email. Please select one",
+                    businesses: matches.map((m)=>({
+                        businessId: m.businessId._id,
+                        businessName: m.businessId.businessName
+                    }))
+                });
+            }
+            req.body.businessId = matches[0].businessId._id;
+        }
+
+        const user = await User.findOne({businessId, email});
+
+        if(!user){
+            throw new AppError("User not found",404);
+        }
+        if(!user.isVerified){
+            throw new AppError("Email not verified. Please verify your email first.",400);
+        }
+
+        const isMatch = await bcrypt.compare(password, user.password);
+        if(!isMatch){
+            throw new AppError("Invalid credentials",400);
+        }
+
+        const token = generateToken(user._id, user.businessId, user.role);
+
+        await sendLoginEmail(email, user.firstName);
+        res.status(200).json({message: "Login successful", token});
 }
 
 const logoutUser = async(req, res) => {
-    try {
         res.status(200).json({message: "Logout successful"});
-    } catch (error) {
-        res.status(500).json({message: "Internal server error", error: error.message});
-    }
 }
 
 const forgottenPassword = async(req,res) => {
-    try {
         const { businessId, email } = req.body;
 
         if (!email){
-            return res.status(400).json({ message: "Email is required." });    
+            throw new AppError("Email is required.",400);    
         }
         if (!businessId) {
             const matches = await User.find({ email }).select("businessId").populate("businessId", "businessName");
@@ -202,7 +240,7 @@ const forgottenPassword = async(req,res) => {
 
         const user = await User.findOne({email});
         if (!user) {
-            return res.status(400).json({message: "User not found"});
+            throw new AppError("User not found",404);
         }
         
         const passwordResetOTP = generateOTP();
@@ -219,23 +257,19 @@ const forgottenPassword = async(req,res) => {
 
         await sendPasswordResetEmail(email, passwordResetOTP);
         res.status(200).json({message: "Password reset email sent. Check your email for OTP."});
-    } catch (error) {
-        res.status(500).json({message: "Internal server error", error: error.message});
-    }
 }
 
 const resetPassword = async(req, res) => {
-    try {
         const { email, businessId, passwordResetOTP, newPassword } = req.body;
 
         if (!email || !passwordResetOTP || !newPassword){
-            return res.status(400).json({ message: "All details are required." });    
+            throw new AppError("All details are required.",400);    
         }
         if (!businessId) {
             const matches = await User.find({ email }).select("businessId").populate("businessId", "businessName");
 
             if (matches.length === 0) {
-                return res.status(200).json({ message: "Invalid email " });
+                throw new AppError("Invalid email",400);
             }
             if (matches.length > 1) {
                 return res.status(200).json({
@@ -252,15 +286,15 @@ const resetPassword = async(req, res) => {
 
         const user = await User.findOne({email, businessId});
         if (!user) {
-            return res.status(400).json({message: "User not found"});
+            throw new AppError("User not found",400);
         }
 
         if (user.passwordResetOTP !== passwordResetOTP){
-            return res.status(400).json({message: "Invalid OTP"});
+            throw new AppError("Invalid OTP",400);
         }
 
         if (user.passwordResetOTPExpiry < new Date()){
-            return res.status(400).json({message: "OTP has expired"});
+            throw new AppError("OTP has expired",400);
         }
 
         const hashedPassword = await bcrypt.hash(newPassword, 10);
@@ -270,9 +304,6 @@ const resetPassword = async(req, res) => {
         await user.save();
 
         res.status(200).json({message: "Password reset successful"});
-    } catch (error) {
-        res.status(500).json({message: "Internal server error", error: error.message});
-    }
 }
 
 export { registerBusinessOwner, forgottenPassword, verifyOTP, loginUser, logoutUser, resetPassword };
