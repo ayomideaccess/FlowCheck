@@ -21,10 +21,6 @@ const registerBusinessOwner = async (req, res) => {
         password 
     } = req.body;
 
-    if (!businessName || !businessAddress || !businessPhoneNo || !businessEmail || !firstName || !lastName || !email || !phoneNo || !password){
-        throw new AppError("All fields are required",400);
-    }
-
     const session = await mongoose.startSession();
     session.startTransaction();
         
@@ -32,10 +28,10 @@ const registerBusinessOwner = async (req, res) => {
         const business = await Business.create(
             [
                 { 
-                    name: businessName,
-                    address: businessAddress,
-                    phone: businessPhoneNo,
-                    email: businessEmail
+                    businessName,
+                    businessAddress,
+                    businessPhoneNo,
+                    businessEmail
                 }
             ], 
             { session }
@@ -85,7 +81,8 @@ const registerBusinessOwner = async (req, res) => {
         if (error.code === 11000){
             throw new AppError("Email already in use.", 409);
         }
-        throw new AppError("Registration failed", 500);
+        console.error(error);
+        throw new AppError(error.message, 500);;
     }
 };
 
@@ -306,4 +303,20 @@ const resetPassword = async(req, res) => {
         res.status(200).json({message: "Password reset successful"});
 }
 
-export { registerBusinessOwner, forgottenPassword, verifyOTP, loginUser, logoutUser, resetPassword };
+const resendOTP = async(req,res) => {
+    const { email, businessId } = req.body;
+
+    const user = await User.findOne({email, businessId});
+    if (!user) {
+        throw new AppError("User not found",404);
+    }
+
+    const otp = generateOTP();
+    const otpExpires = new Date(Date.now() + 10 * 60 * 1000); //10 minutes
+    await user.save();
+
+    await sendOTPEmail(email,otp);
+    res.status(200).json({ message: "Check your email for OTP" });
+};
+
+export { registerBusinessOwner, forgottenPassword, verifyOTP, loginUser, logoutUser, resetPassword, resendOTP };

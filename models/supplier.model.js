@@ -1,5 +1,6 @@
 import mongoose, { Schema } from "mongoose";
 import Business from './business.model.js';
+import validator from 'validator';
 
 const supplierSchema = new Schema({
     businessId: {

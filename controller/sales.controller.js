@@ -3,6 +3,7 @@ import Product from '../models/product.model.js';
 import Sale from '../models/sales.model.js';
 import SaleItem from '../models/saleItem.model.js';
 import { checkAndUpdateLowStockAlert } from '../services/alert.service.js';
+import AppError from '../utils/AppError.js';
 
 const createSale = async (req, res) => {
     const session = await mongoose.startSession();

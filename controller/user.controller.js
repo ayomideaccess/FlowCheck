@@ -1,11 +1,9 @@
 import User from '../models/user.model.js';
+import AppError from '../utils/AppError.js';
 
 const addStaff = async (req, res) =>{
-    try {
         const { firstName, lastName, email, phoneNo, role } = req.body;
-        if (!firstName || !lastName || !email || !phoneNo || !role){
-            return res.status(400).json({ message: "All fields are required." });
-        }
+        
         const allowedRolesToCreate = {
             owner: ["admin", "manager", "sales-attendant"],
             admin: ["manager", "sales-attendant"]
@@ -15,14 +13,12 @@ const addStaff = async (req, res) =>{
         const permittedRoles = allowedRolesToCreate[requesterRole] || [];
 
         if (!permittedRoles.includes(role)){
-            return req.status(403).json({
-                message: `A ${requesterRole} cannot create a user with ${role}`
-            })
+            throw new AppError(`A ${requesterRole} cannot create a user with ${role}`,403)
         }
         const businessId = req.user.businessId;
         const existingUser = await User.findOne({ businessId, email });
         if (existingUser){
-            return res.status(409).json({ message:"This email is already registered under your business." });
+            throw new AppError("This email is already registered under your business.",409);
         }
 
         const newStaff = await User.create({
@@ -44,33 +40,25 @@ const addStaff = async (req, res) =>{
                 role: newStaff.role
             }
          });
-    } catch (error) {
-        res.status(500).json({ message: "Error adding staff", error: error.message });
-    }
 }
 
 const getAllUsers = async (req, res) =>{
-    try {
         if (!["owner","admin"].includes(req.user.role)){
-            return res.status(403).json({ message: "You are not allowed to perform this action" })
+            throw new AppError("You are not allowed to perform this action",403)
         }
 
         const businessId = req.user.businessId;
         const users = await User.find({businessId}).select('firstName lastName email role');
         res.status(200).json(users);
-    } catch (error) {
-        res.status(500).json({ message: "Error getting all users", error: error.message });
-    }
 }
 
 const updateUserById = async (req, res) =>{
-    try {
         const { userId } = req.params;
         const { firstName, lastName, phoneNo, role } = req.body;
         
         const targetUser = await User.findOne({ _id:userId, businessId: req.user.businessId });
         if (!targetUser){
-            return res.status(404).json({ message: "Not found" })
+            throw new AppError("Not found",404)
         }
         if ( role && role !== targetUser.role) {
             const allowedRolesToAssign = {
@@ -79,7 +67,7 @@ const updateUserById = async (req, res) =>{
             };
             const permitted = allowedRolesToAssign[req.user.role] || [];
             if (!permitted.includes(role)) {
-                return res.status(403).json({ message: `You are not allowed to assign the role ${role} to ${targetUser}` })
+                throw new AppError(`You are not allowed to assign the role ${role} to ${targetUser}`,403)
             }
         }
 
@@ -96,23 +84,16 @@ const updateUserById = async (req, res) =>{
                 role: user.role
             }
          });
-    } catch (error) {
-        res.status(500).json({ message: "Error updating role", error: error.message });
-    }
 }
 
 const deleteUser = async (req,res)=>{
-    try {
         const { userId } = req.params;
 
         const user = await User.findByIdAndDelete({ _id:userId, businessId: req.user.businessId });
         if (!user){
-            return res.status(404).json({ message: "Not found" })
+            throw new AppError("Not found",404)
         }
         res.status(200).json({ message:"User deleted succesfully." })
-    } catch (error) {
-        res.status(500).json({ message: "Error deleting user", error: error.message });
-    }
 }
 
 export { addStaff, getAllUsers, updateUserById, deleteUser };

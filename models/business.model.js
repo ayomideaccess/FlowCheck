@@ -32,8 +32,7 @@ const businessSchema = new Schema({
     },
     ownerId:{
         type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
-        required: true
+        ref: "User"
     },
     createdAt:{
         type: Date,

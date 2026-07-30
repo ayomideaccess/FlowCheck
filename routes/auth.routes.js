@@ -7,7 +7,7 @@ import { registerBusinessOwner, verifyOTP, loginUser, logoutUser, forgottenPassw
 
 /**
  * @swagger
- * /api/auth/register:
+ * /auth/register:
  *   post:
  *     summary: Register a new business and its owner
  *     description: Registers a new business and its owner and sends an OTP to the owner's email for account verification.
