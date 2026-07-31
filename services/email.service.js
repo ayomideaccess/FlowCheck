@@ -41,6 +41,23 @@ export const sendLoginEmail = async (email, firstName)=>{
     });
 };
 
+export const sendUserEmail = async (email, firstName, role, businessName)=>{
+    await transporter.sendMail({
+        from: `"FlowCheck" <${process.env.GMAIL_USER}>`,
+        to: email,
+        subject: 'Welcome to FlowCheck🎉',
+        html: `
+        <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+        <h2>Hi ${firstName}👋</h2>
+        <p>Welcome aboard! You have been added as the <b>${role}</b> for <b>${businessName}</b> on FlowCheck.</p>
+        <p>
+        Start <a href="${process.env.APP_URL}/login" style="background: #4F46E5; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">here</a>
+        <p>If you have any questions, just reply this email.</p>
+        </p>
+        `
+    });
+};
+
 export const sendPasswordResetEmail = async (email, passwordResetOTP)=>{
     await transporter.sendMail({
         from: `"FlowCheck" <${process.env.GMAIL_USER}>`,

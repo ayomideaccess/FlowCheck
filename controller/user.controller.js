@@ -1,5 +1,7 @@
 import User from '../models/user.model.js';
 import AppError from '../utils/AppError.js';
+import { sendUserEmail } from '../services/email.service.js';
+import Business from '../models/business.model.js';
 
 const addStaff = async (req, res) =>{
         const { firstName, lastName, email, phoneNo, role } = req.body;
@@ -16,6 +18,7 @@ const addStaff = async (req, res) =>{
             throw new AppError(`A ${requesterRole} cannot create a user with ${role}`,403)
         }
         const businessId = req.user.businessId;
+        const business = await Business.findById(businessId);
         const existingUser = await User.findOne({ businessId, email });
         if (existingUser){
             throw new AppError("This email is already registered under your business.",409);
@@ -30,6 +33,8 @@ const addStaff = async (req, res) =>{
             role,
             isVerified: true
         });
+
+        await sendUserEmail(email, firstName, role, business.businessName);
         return res.status(201).json({ 
             message: "Staff member added successfully.",
             user: {

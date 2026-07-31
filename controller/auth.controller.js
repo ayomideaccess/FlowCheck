@@ -94,8 +94,8 @@ const verifyOTP = async(req, res) => {
         if (!user){
             throw new AppError("User not found", 404);
         }
-
-        if (user.otp !== otp){
+        
+        if(hashOtp(otp) !== user.otp){
             throw new AppError("Invalid OTP",400);
         }
 
@@ -117,9 +117,7 @@ const loginOwner = async(req, res) =>{
         // if (!email || !password) {
         //     return res.status(400).json({ message: "Email and password are required" })
         // }
-        if (req.user.role !== "owner") {
-            throw new AppError("You cannot login as the owner",400);
-        }
+
         if (!businessId){
             const matches = await User.find({email}).select("businessId role").populate("businessId", "businessName");
 
@@ -143,9 +141,14 @@ const loginOwner = async(req, res) =>{
         if(!user){
             throw new AppError("User not found",404);
         }
+
         if(!user.isVerified){
             throw new AppError("Email not verified. Please verify your email first.",400);
-        }
+        };
+
+        if (user.role !== "owner") {
+            throw new AppError("You cannot login as the owner",400);
+        };
 
         const isMatch = await bcrypt.compare(password, user.password);
         if(!isMatch){
@@ -311,12 +314,15 @@ const resendOTP = async(req,res) => {
         throw new AppError("User not found",404);
     }
 
-    const otp = generateOTP();
+    const { otp, hashedOtp } = generateOTP();
     const otpExpires = new Date(Date.now() + 10 * 60 * 1000); //10 minutes
-    await user.save();
 
     await sendOTPEmail(email,otp);
+
+    user.otp = hashedOtp;
+    user.otpExpiry = otpExpires;
+    await user.save();
     res.status(200).json({ message: "Check your email for OTP" });
 };
 
-export { registerBusinessOwner, forgottenPassword, verifyOTP, loginUser, logoutUser, resetPassword, resendOTP };
+export { registerBusinessOwner, forgottenPassword, verifyOTP, loginUser, loginOwner, logoutUser, resetPassword, resendOTP };
