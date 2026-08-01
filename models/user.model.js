@@ -48,12 +48,6 @@ const userSchema = new Schema({
     isVerified:{
         type: Boolean,
         default: false
-    },
-    passwordResetOTP:{
-        type: String
-    },
-    passwordResetOTPExpiry: {
-        type: Date
     }
 }, {
     timestamps: true

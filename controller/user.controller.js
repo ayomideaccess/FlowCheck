@@ -48,20 +48,35 @@ const addStaff = async (req, res) =>{
 }
 
 const getAllUsers = async (req, res) =>{
+        const { businessId } = req.params;
+        if (businessId !== req.user.businessId.toString()){
+            throw new AppError("You are not allowed to view users of this business",403)
+        }
+
+        const business = await Business.findById(businessId);
+        if (!business){
+            throw new AppError("Business not found",404)
+        }
         if (!["owner","admin"].includes(req.user.role)){
             throw new AppError("You are not allowed to perform this action",403)
         }
-
-        const businessId = req.user.businessId;
         const users = await User.find({businessId}).select('firstName lastName email role');
-        res.status(200).json(users);
+        res.status(200).json({
+            success: true,
+            users,
+            name: business.businessName
+        });
 }
 
 const updateUserById = async (req, res) =>{
-        const { userId } = req.params;
+        const { userId, businessId } = req.params;
         const { firstName, lastName, phoneNo, role } = req.body;
-        
-        const targetUser = await User.findOne({ _id:userId, businessId: req.user.businessId });
+
+        if (businessId !== req.user.businessId.toString()){
+            throw new AppError("You are not allowed to update users of this business",403)
+        }
+
+        const targetUser = await User.findOne({ _id:userId, businessId });
         if (!targetUser){
             throw new AppError("Not found",404)
         }
@@ -92,12 +107,23 @@ const updateUserById = async (req, res) =>{
 }
 
 const deleteUser = async (req,res)=>{
-        const { userId } = req.params;
+        const { userId, businessId } = req.params;
 
-        const user = await User.findByIdAndDelete({ _id:userId, businessId: req.user.businessId });
+        if (businessId !== req.user.businessId.toString()){
+            throw new AppError("You are not allowed to delete users of this business",403)
+        }
+        if (userId === req.user._id.toString() ){
+            throw new AppError("You cannot delete yourself",403)
+        }
+
+        const user = await User.findOne({ _id:userId, businessId });
+        if ( user && user.role === "owner" ){
+            throw new AppError("You are not allowed to delete the owner of the business",403)
+        }
         if (!user){
             throw new AppError("Not found",404)
         }
+        await User.findByIdAndDelete(userId);
         res.status(200).json({ message:"User deleted succesfully." })
 }
 

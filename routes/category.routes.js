@@ -15,6 +15,24 @@ const router = express.Router();
  *       - Categories
  *     security:
  *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - name
+ *               - description
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 description: Category name
+ *                 example: Electronics
+ *               description:
+ *                 type: string
+ *                 description: Category description
+ *                 example: Devices and gadgets    
  *     responses:
  *       201:
  *         description: Category created successfully
@@ -74,6 +92,12 @@ router.get('/categories', protect, authorize("owner","admin","manager","sales-at
  *         schema:
  *           type: string
  *         description: Category ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
  *     responses:
  *       200:
  *         description: Category updated successfully

@@ -129,7 +129,7 @@ router.post('/verify-otp', verifyOTP);
  *               businessId:
  *                 type: string
  *                 example: 688b6f4c2a7d4d5f0d123456
- *               email:
+ *               email: 
  *                 type: string
  *                 format: email
  *                 example: owner@example.com

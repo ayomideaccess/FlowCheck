@@ -168,10 +168,6 @@ const loginUser = async(req, res) => {
             throw new AppError("Email is required",400)
         }
 
-        if (req.user.role === "owner") {
-            throw new AppError("You need to login as the owner",400);
-        }
-
         if (!businessId){
             const matches = await User.find({email}).select("businessId role").populate("businessId", "businessName");
 
@@ -198,10 +194,8 @@ const loginUser = async(req, res) => {
         if(!user.isVerified){
             throw new AppError("Email not verified. Please verify your email first.",400);
         }
-
-        const isMatch = await bcrypt.compare(password, user.password);
-        if(!isMatch){
-            throw new AppError("Invalid credentials",400);
+        if (user.role === "owner") {
+            throw new AppError("You need to login as the owner",400);
         }
 
         const token = generateToken(user._id, user.businessId, user.role);
@@ -235,34 +229,32 @@ const forgottenPassword = async(req,res) => {
                     }))
             });
         }
-        req.body.businessId = matches[0].businessId,_id;
+        req.body.businessId = matches[0].businessId._id;
     }
 
-        const user = await User.findOne({email});
+        const user = await User.findOne({email, businessId});
         if (!user) {
             throw new AppError("User not found",404);
         }
         
-        const passwordResetOTP = generateOTP();
-        const passResetOTPExpires = new Date(Date.now() + 10 * 60 * 1000); //10 minutes
-
-        const hashedpasswordResetOtp = hashOtp(passwordResetOTP);
+        const { otp, hashedOtp } = generateOTP();
+        const otpExpires = new Date(Date.now() + 10 * 60 * 1000); //10 minutes
 
         await user.updateOne({
             $set:{
-                passwordResetOTP: hashedpasswordResetOtp,
-                passwordResetOTPExpiry: passResetOTPExpires
+                otp: hashedOtp,
+                otpExpiry: otpExpires
             }
         });
 
-        await sendPasswordResetEmail(email, passwordResetOTP);
+        await sendPasswordResetEmail(email, otp);
         res.status(200).json({message: "Password reset email sent. Check your email for OTP."});
 }
 
 const resetPassword = async(req, res) => {
-        const { email, businessId, passwordResetOTP, newPassword } = req.body;
+        const { email, businessId, otp, newPassword } = req.body;
 
-        if (!email || !passwordResetOTP || !newPassword){
+        if (!email || !otp || !newPassword){
             throw new AppError("All details are required.",400);    
         }
         if (!businessId) {
@@ -280,7 +272,7 @@ const resetPassword = async(req, res) => {
                     }))
             });
         }
-        req.body.businessId = matches[0].businessId,_id;
+        req.body.businessId = matches[0].businessId._id;
     }
 
 
@@ -289,18 +281,18 @@ const resetPassword = async(req, res) => {
             throw new AppError("User not found",400);
         }
 
-        if (user.passwordResetOTP !== passwordResetOTP){
+        if (hashOtp(otp) !== user.otp){
             throw new AppError("Invalid OTP",400);
         }
 
-        if (user.passwordResetOTPExpiry < new Date()){
+        if (user.otpExpiry < new Date()){
             throw new AppError("OTP has expired",400);
         }
 
         const hashedPassword = await bcrypt.hash(newPassword, 10);
         user.password = hashedPassword;
-        user.passwordResetOTP = undefined;
-        user.passwordResetOTPExpiry = undefined;
+        user.otp = undefined;
+        user.otpExpiry = undefined;
         await user.save();
 
         res.status(200).json({message: "Password reset successful"});
