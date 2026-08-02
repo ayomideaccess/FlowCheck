@@ -47,7 +47,7 @@ const productSchema = new Schema({
     }
 })
 
-productSchema.pre('save', async function(next){
+productSchema.pre('save', async function(){
     if (!this.SKU){
         const category = await Category.findById(this.categoryId).select('name');
         const categoryName = category?.name || 'GEN';
@@ -65,7 +65,6 @@ productSchema.pre('save', async function(next){
         }
         this.SKU = newSku;
     }
-    next();
 });
 
 export default mongoose.model('Product', productSchema);

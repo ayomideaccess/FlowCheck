@@ -2,6 +2,7 @@ import Product from '../models/product.model.js';
 import Businesss from '../models/business.model.js';
 import Category from '../models/category.model.js';
 import AppError from '../utils/AppError.js';
+import { generateSKU } from '../services/generateSKU.js';
 
 const addProduct = async(req, res) => {
     const { name, unitPrice, costPrice, currentStock, reorderLevel, unit, categoryId } = req.body;
@@ -10,17 +11,22 @@ const addProduct = async(req, res) => {
         throw new AppError("Category not found",400);
     }
     const businessId = req.user.businessId;
+    const sku = generateSKU(name, category.name);
+
+    const existingProduct = await Product.findOne({ businessId, SKU: sku });
+    if (existingProduct) {
+        throw new AppError("Product with the same SKU already exists", 409);
+    }
     const newProduct = await Product.create({
         businessId,
         name,
-        SKU,
+        SKU: sku,
         categoryId,
         unitPrice,
         costPrice,
         currentStock,
         reorderLevel,
-        unit,
-        isActive
+        unit
     });
     res.status(201).json({ message: "Product created successfully", newProduct });
 }
@@ -34,7 +40,7 @@ const getAllProducts = async(req, res) => {
 const getProductById = async(req, res) => {
     const { productId } = req.params;
     const businessId = req.user.businessId;
-    const product = await Product.findOne({businessId, _id:productId}).select('name unitPrice costPrice currentStock reorderLevel unit');
+    const product = await Product.findOne({businessId, _id:productId}).select('name unitPrice costPrice SKU currentStock reorderLevel unit');
     res.status(200).json(product);  
 }
 
@@ -56,6 +62,7 @@ const updateProduct = async(req, res) => {
             costPrice: product.costPrice,
             currentStock: product.currentStock,
             reorderLevel: product.reorderLevel,
+            SKU: product.SKU,
             unit: product.unit
         }
         });

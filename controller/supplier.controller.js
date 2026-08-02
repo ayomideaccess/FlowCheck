@@ -1,71 +1,63 @@
 import Supplier from '../models/supplier.model.js';
 import Business from '../models/business.model.js';
+import AppError from '../utils/AppError.js';
 
 const addSupplier = async(req, res) => {
-    try {
-        const { name, contactPerson, phone, email, address } = req.body;
-        if (!name || !contactPerson || !phone || !email || !address) {
-            return res.status(400).json({ message: "All fields are required" })
-        }
-        const businessId = req.user.businessId;
-        const newSupplier = new Supplier.create({
-            businessId: businessId,
-            name,
-            contactPerson,
-            phone,
-            email,
-            address
-        });
-        res.status(201).json({ message: "Supplier created successfully", newSupplier });
-    } catch (error) {
-        res.status(500).json({ message: "Error adding supplier", error: error.message });
+    const { name, contactPerson, phone, email, address } = req.body;
+    if (!name || !contactPerson || !phone || !email || !address) {
+        throw new AppError("All fields are required", 400);
     }
+    const businessId = req.user.businessId;
+
+    const supplierExists = await Supplier.findOne({ businessId, name, email });
+    if (supplierExists) {
+        throw new AppError("Supplier with this name and email already exists", 409);
+    };
+    const newSupplier = await Supplier.create({
+        businessId: businessId,
+        name,
+        contactPerson,
+        phone,
+        email,
+        address
+    });
+    res.status(201).json({ message: "Supplier created successfully", newSupplier });
 }
 
 const getAllSuppliers = async(req, res) => {
-    try {
-        const businessId = req.user.businessId;
-        const suppliers = await Supplier.find({businessId}).select('name contactPerson phone email address');
-        res.status(200).json(suppliers);
-    } catch (error) {
-        res.status(500).json({ message: "Error getting suppliers", error: error.message });
-    }
+    const businessId = req.user.businessId;
+    const suppliers = await Supplier.find({businessId}).select('name contactPerson phone email address');
+    res.status(200).json(suppliers);
 }
 
 const getSupplierById = async(req, res) => {
-    try {
-        const { supplierId } = req.params;
-        const businessId = req.user.businessId;
-        const supplier = await Supplier.findOne({businessId, _id: supplierId}).select('name contactPerson phone email address');
-        res.status(200).json(supplier);
-    } catch (error) {
-        res.status(500).json({ message: "Error getting suppliers", error: error.message });
-    }
+    const { supplierId } = req.params;
+    const businessId = req.user.businessId;
+    const supplier = await Supplier.findOne({businessId, _id: supplierId}).select('name contactPerson phone email address');
+    res.status(200).json(supplier);
 }
 
 const updateSupplier = async(req, res) => {
-    try {
-        const { supplierId } = req.params;
-        const { name, contactPerson, phone, email, address } = req.body;
+    const { supplierId } = req.params;
+    const { name, contactPerson, phone, email, address } = req.body;
 
-        const targetSupplier = await Supplier.findOne({ _id: supplierId, businessId: req.user.businessId });
-        if (!targetSupplier){
-            return res.status(404).json({ message: "Not found" })
-        }
-
-        const supplier = await Supplier.findByIdAndUpdate(supplierId, req.body, { new: true, runValidators: true });
-        res.status(200).json({message: "Supplier updated successfully.", supplier});   
-    } catch (error) {
-        res.status(500).json({ message: "Error updating supplier", error: error.message });
+    const targetSupplier = await Supplier.findOne({ _id: supplierId, businessId: req.user.businessId });
+    if (!targetSupplier){
+        throw new AppError("Not found", 404);
     }
+
+    const supplier = await Supplier.findByIdAndUpdate(supplierId, req.body, { new: true, runValidators: true });
+    res.status(200).json({message: "Supplier updated successfully.", supplier});   
 }
 
 const deleteSupplier = async(req, res) => {
-    try {
-        
-    } catch (error) {
-        res.status(500).json({ message: "Error deleting supplier", error: error.message });
+    const { supplierId } = req.params;
+
+    const supplier = await Supplier.findByIdAndDelete({ _id:supplierId, businessId: req.user.businessId });
+    if (!supplier){
+        throw new AppError("Supplier not found", 404);
     }
+    res.status(200).json({ message:"Supplier deleted succesfully." });
 }
 
 export { addSupplier, getAllSuppliers, getSupplierById, updateSupplier, deleteSupplier };

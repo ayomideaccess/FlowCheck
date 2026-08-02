@@ -15,6 +15,34 @@ const router = express.Router();
  *       - Suppliers
  *     security:
  *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - name
+ *               - contactPerson
+ *               - phone
+ *               - email
+ *               - address
+ *             properties:
+ *                 name:
+ *                   type: string
+ *                   example: Baby Care Supplies
+ *                 contactPerson:
+ *                   type: string
+ *                   example: John Doe
+ *                 phone:
+ *                   type: string
+ *                   example: 09065357753
+ *                 email:
+ *                   type: string
+ *                   example: johndoe@example.com
+ *                 address:
+ *                   type: string
+ *                   example: 123 Main St, City, Country
  *     responses:
  *       201:
  *         description: Supplier created successfully
@@ -80,7 +108,7 @@ router.get('/', protect, authorize("owner", "admin", "manager", "sales-attendant
  *       500:
  *         description: Internal server error
  */
-router.get('/:productId', protect, authorize("owner", "admin", "manager", "sales-attendant"),getSupplierById);
+router.get('/:supplierId', protect, authorize("owner", "admin", "manager", "sales-attendant"),getSupplierById);
 
 /**
  * @swagger

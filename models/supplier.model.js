@@ -10,13 +10,16 @@ const supplierSchema = new Schema({
     },
     name: {
         type: String,
-        required: true
+        required: true,
+        trim: true
     },
     contactPerson: {
-        type: String
+        type: String,
+        trim: true
     },
     phone: {
-        type: String
+        type: String,
+        trim: true
     },
     email: {
         type: String,
