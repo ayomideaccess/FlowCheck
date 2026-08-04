@@ -7,7 +7,7 @@ const router = express.Router();
 
 /**
  * @swagger
- * /low-stock:
+ * /reports/low-stock:
  *   get:
  *     summary: Get low-stock products
  *     description: Retrieves all products that have reached or fallen below their minimum stock level.
@@ -29,7 +29,7 @@ router.get('/low-stock', protect, authorize("owner","admin","manager"), getLowSt
 
 /**
  * @swagger
- * /stock-valuation:
+ * /reports/stock-valuation:
  *   get:
  *     summary: Get inventory valuation
  *     description: Calculates and returns the total value of the current inventory.
@@ -51,7 +51,7 @@ router.get('/stock-valuation', protect, authorize("owner","admin","manager"), ge
 
 /**
  * @swagger
- * /sales-summary:
+ * /reports/sales-summary:
  *   get:
  *     summary: Get sales summary
  *     description: Retrieves a summary of sales, including revenue and other sales statistics for the authenticated business.
@@ -59,6 +59,16 @@ router.get('/stock-valuation', protect, authorize("owner","admin","manager"), ge
  *       - Reports
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: period
+ *         required: true
+ *         schema:
+ *           type: string
+ *           enum: 
+ *             - daily
+ *             - monthly
+ *         description: The period for which to retrieve the sales summary (daily or monthly).
  *     responses:
  *       200:
  *         description: Sales summary retrieved successfully

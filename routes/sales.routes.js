@@ -6,7 +6,7 @@ const router = express.Router();
 
 /**
  * @swagger
- * /:
+ * /sales:
  *   post:
  *     summary: Record a sale
  *     description: Creates a new sales transaction and updates the product inventory accordingly.
@@ -14,6 +14,33 @@ const router = express.Router();
  *       - Sales
  *     security:
  *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - items
+ *             properties:
+ *               items:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   required:
+ *                     - productId
+ *                     - quantity
+ *                     - price
+ *                   properties:
+ *                     productId:
+ *                       type: string
+ *                       example: "12345"
+ *                     quantity:
+ *                       type: number
+ *                       example: 10
+ *                     price:
+ *                       type: number
+ *                       example: 5000   
  *     responses:
  *       201:
  *         description: Sale recorded successfully
@@ -32,7 +59,7 @@ router.post('/', protect, createSale);
 
 /**
  * @swagger
- * /:
+ * /sales:
  *   get:
  *     summary: Get all sales
  *     description: Retrieves all sales transactions for the authenticated business.
@@ -54,7 +81,7 @@ router.get('/', protect, getAllSales);
 
 /**
  * @swagger
- * /{saleId}:
+ * /sales/{saleId}:
  *   get:
  *     summary: Get sale by ID
  *     description: Retrieves the details of a specific sales transaction.

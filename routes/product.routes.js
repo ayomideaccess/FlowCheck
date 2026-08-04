@@ -7,7 +7,7 @@ const router = express.Router();
 
 /**
  * @swagger
- * /product:
+ * /products/product:
  *   post:
  *     summary: Add a new product
  *     description: Creates a new product and adds it to the authenticated business.
@@ -15,6 +15,30 @@ const router = express.Router();
  *       - Products
  *     security:
  *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - name
+ *               - description
+ *               - price
+ *               - quantity
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 example: "Diapers"
+ *               description:
+ *                 type: string
+ *                 example: "Disposable diapers for babies"
+ *               price:
+ *                 type: number
+ *                 example: 19.99
+ *               quantity:
+ *                 type: number
+ *                 example: 100
  *     responses:
  *       201:
  *         description: Product created successfully
@@ -33,7 +57,7 @@ router.post('/product', protect, authorize("owner","admin","manager"), addProduc
 
 /**
  * @swagger
- * /:
+ * /products:
  *   get:
  *     summary: Get all products
  *     description: Retrieves all products belonging to the authenticated business.
@@ -55,7 +79,7 @@ router.get('/', protect, authorize("owner","admin","manager","sales-attendant"),
 
 /**
  * @swagger
- * /{productId}:
+ * /products/{productId}:
  *   get:
  *     summary: Get a product by ID
  *     description: Retrieves a single product by its ID.
@@ -84,7 +108,7 @@ router.get('/:productId', protect, authorize("owner","admin","manager","sales-at
 
 /**
  * @swagger
- * /{productId}:
+ * /products/{productId}:
  *   patch:
  *     summary: Update a product
  *     description: Updates an existing product.
@@ -117,7 +141,7 @@ router.patch('/:productId', protect, authorize("owner","admin","manager"), updat
 
 /**
  * @swagger
- * /{productId}:
+ * /products/{productId}:
  *   delete:
  *     summary: Delete a product
  *     description: Deletes a product from the authenticated business.

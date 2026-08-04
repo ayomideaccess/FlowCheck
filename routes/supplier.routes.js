@@ -7,7 +7,7 @@ const router = express.Router();
 
 /**
  * @swagger
- * /:
+ * /suppliers:
  *   post:
  *     summary: Add a new supplier
  *     description: Creates a new supplier for the authenticated business.
@@ -28,21 +28,21 @@ const router = express.Router();
  *               - email
  *               - address
  *             properties:
- *                 name:
- *                   type: string
- *                   example: Baby Care Supplies
- *                 contactPerson:
- *                   type: string
- *                   example: John Doe
- *                 phone:
- *                   type: string
- *                   example: 09065357753
- *                 email:
- *                   type: string
- *                   example: johndoe@example.com
- *                 address:
- *                   type: string
- *                   example: 123 Main St, City, Country
+ *               name:
+ *                 type: string
+ *                 example: Baby Care Supplies
+ *               contactPerson:
+ *                 type: string
+ *                 example: John Doe
+ *               phone:
+ *                 type: string
+ *                 example: 09065357753
+ *               email:
+ *                 type: string
+ *                 example: johndoe@example.com
+ *               address:
+ *                 type: string
+ *                 example: 123 Main St, City, Country
  *     responses:
  *       201:
  *         description: Supplier created successfully
@@ -59,9 +59,10 @@ const router = express.Router();
  */
 router.post('/', protect, authorize("owner", "admin", "manager"), addSupplier);
 
+
 /**
  * @swagger
- * /:
+ * /suppliers:
  *   get:
  *     summary: Get all suppliers
  *     description: Retrieves all suppliers belonging to the authenticated business.
@@ -83,7 +84,7 @@ router.get('/', protect, authorize("owner", "admin", "manager", "sales-attendant
 
 /**
  * @swagger
- * /{supplierId}:
+ * /suppliers/{supplierId}:
  *   get:
  *     summary: Get supplier by ID
  *     description: Retrieves a supplier using its ID.
@@ -112,7 +113,7 @@ router.get('/:supplierId', protect, authorize("owner", "admin", "manager", "sale
 
 /**
  * @swagger
- * /{supplierId}:
+ * /suppliers/{supplierId}:
  *   patch:
  *     summary: Update supplier
  *     description: Updates an existing supplier.
@@ -145,7 +146,7 @@ router.patch('/:supplierId',protect, authorize("owner", "admin", "manager"), upd
 
 /**
  * @swagger
- * /{supplierId}:
+ * /suppliers/{supplierId}:
  *   delete:
  *     summary: Delete supplier
  *     description: Deletes a supplier from the authenticated business.

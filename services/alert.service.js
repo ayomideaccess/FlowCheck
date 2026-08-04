@@ -7,7 +7,7 @@ export const checkAndUpdateLowStockAlert = async (productId, businessId, session
     if (!product) return;
 
     if (product.currentStock <= product.reorderLevel) {
-        await Alert.findByIdAndUpdate(
+        await Alert.findOneAndUpdate(
         { businessId, productId, alertType: "low-stock", isResolved: false },
         { businessId, productId, alertType: "low-stock", isResolved: false },
         { upsert: true, session  }

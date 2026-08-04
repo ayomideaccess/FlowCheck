@@ -43,6 +43,7 @@ const adjustInventory = async(req,res) => {
         }
         const businessId = req.user.businessId;
         const type = "adjustment";
+        const performedBy = req.user.userId;
         const newStock = await Inventory.create({
             businessId: businessId,
             productId,

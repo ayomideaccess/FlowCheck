@@ -128,15 +128,15 @@ router.post('/verify-otp', verifyOTP);
  *             properties:
  *               businessId:
  *                 type: string
- *                 example: 688b6f4c2a7d4d5f0d123456
+ *                 example: 6a6ba60ab4acabc4fd39cd82
  *               email: 
  *                 type: string
  *                 format: email
- *                 example: owner@example.com
+ *                 example: haryhormhidey2345@gmail.com
  *               password:
  *                 type: string
  *                 format: password
- *                 example: Password123
+ *                 example: NewPassword123
  *     responses:
  *       200:
  *         description: Login successful
