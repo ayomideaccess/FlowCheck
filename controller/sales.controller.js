@@ -87,7 +87,22 @@ const createSale = async (req, res) => {
 };
 
 const getAllSales = async (req, res) => {
-    const sales = await Sale.find({ businessId: req.user.businessId })
+    const businessId = req.user.businessId;
+    const { soldBy, minAmount, maxAmount, startDate, endDate } = req.query;
+    const filter = { businessId };
+
+    if (soldBy) filter.soldBy = soldBy;
+    if (minAmount !== undefined || maxAmount !== undefined) {
+        filter.totalAmount = {};
+        if (minAmount !== undefined) filter.totalAmount.$gte = Number(minAmount);
+        if (maxAmount !== undefined) filter.totalAmount.$lte = Number(maxAmount);
+    }
+    if (startDate || endDate) {
+        filter.createdAt = {};
+        if (startDate) filter.createdAt.$gte = new Date(startDate);
+        if (endDate) filter.createdAt.$lte = new Date(endDate);
+    }
+    const sales = await Sale.find(filter)
     .populate("soldBy", "firstName lastName")
     .sort({ createdAt: -1 });
 

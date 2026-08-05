@@ -18,7 +18,14 @@ const addCategory = async(req, res) =>{
 
 const getAllCategories = async(req, res) =>{
         const businessId = req.user.businessId;
-        const categories = await Category.find({businessId}).select('name description');
+        const { search } = req.query;
+        const filter = { businessId };
+        if (search) {
+            filter.$or = [
+                { name: { $regex: search, $options: "i" } }
+            ];
+        }
+        const categories = await Category.find(filter).select('name description');
         res.status(200).json(categories);
 }
 

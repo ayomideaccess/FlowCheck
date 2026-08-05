@@ -33,7 +33,19 @@ const addProduct = async(req, res) => {
 
 const getAllProducts = async(req, res) => {
     const businessId = req.user.businessId;
-    const products = await Product.find({businessId}).select('name unitPrice costPrice currentStock reorderLevel unit');
+    const { categoryId, isActive, minPrice, maxPrice } = req.query;
+
+    const filter = { businessId };
+    if (categoryId) filter.categoryId = categoryId;
+    if (isActive !== undefined) filter.isActive = isActive === "true";
+    if (minPrice !== undefined || maxPrice !== undefined) {
+        filter.unitPrice = {};
+        if (minPrice !== undefined) filter.unitPrice.$gte = Number(minPrice);
+        if (maxPrice !== undefined) filter.unitPrice.$lte = Number(maxPrice);
+    }
+
+    const products = await Product.find(filter).select('name unitPrice costPrice currentStock reorderLevel unit');
+
     res.status(200).json(products);
 }
 

@@ -66,7 +66,7 @@ router.post('/:businessId/users', protect, authorize("owner","admin"), addStaff)
 
 /**
  * @swagger
- * /{businessId}/users:
+ * /users:
  *   get:
  *     summary: Get all staff
  *     description: Retrieves all staff members belonging to a business.
@@ -91,7 +91,7 @@ router.post('/:businessId/users', protect, authorize("owner","admin"), addStaff)
  *       500:
  *         description: Internal server error
  */
-router.get('/:businessId/users', protect, authorize("owner","admin"), getAllUsers);
+router.get('/users', protect, authorize("owner","admin"), getAllUsers);
 
 /**
  * @swagger

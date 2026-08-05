@@ -2,7 +2,7 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { sendOTPEmail, sendLoginEmail, sendPasswordResetEmail } from '../services/email.service.js';
 import { generateOTP, hashOtp } from '../services/otp.service.js'; 
-import generateToken from '../utils/generateToken.js';
+import { generateAccessToken, generateRefreshToken } from '../utils/generateToken.js';
 import User from '../models/user.model.js';
 import Business from '../models/business.model.js';
 import mongoose from 'mongoose';
@@ -155,10 +155,11 @@ const loginOwner = async(req, res) =>{
             throw new AppError("Invalid credentials",400);
         }
 
-        const token = generateToken(user._id, user.businessId, user.role);
+        const accessToken = generateAccessToken(user._id, user.businessId, user.role);
+        const refreshToken = generateRefreshToken(user._id, user.businessId, user.role);
 
         await sendLoginEmail(email, user.firstName);
-        res.status(200).json({message: "Login successful", token});
+        res.status(200).json({message: "Login successful", accessToken});
 }
 
 const loginUser = async(req, res) => {
@@ -198,15 +199,46 @@ const loginUser = async(req, res) => {
             throw new AppError("You need to login as the owner",400);
         }
 
-        const token = generateToken(user._id, user.businessId, user.role);
+        const accessToken = generateAccessToken(user._id, user.businessId, user.role);
+        const refreshToken = generateRefreshToken(user._id, user.businessId, user.role);
 
         await sendLoginEmail(email, user.firstName);
-        res.status(200).json({message: "Login successful", token});
+
+        res.cookie("refreshToken", refreshToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "strict",
+            maxAge: 7 * 24 * 60 * 60 * 1000
+        });
+        res.status(200).json({message: "Login successful", accessToken});
 }
 
 const logoutUser = async(req, res) => {
+        res.clearCookie("refreshToken");
         res.status(200).json({message: "Logout successful"});
 }
+
+
+const refreshToken = async (req, res) => {
+  const refreshToken = req.cookies.refreshToken;
+
+  if (!refreshToken) {
+    throw new AppError("Refresh token not found", 401);
+  }
+
+  const decoded = jwt.verify(
+    refreshToken,
+    process.env.REFRESH_TOKEN_SECRET
+  );
+
+  const accessToken = generateAccessToken(decoded.id);
+
+  return res.status(200).json({
+    success: true,
+    message: "Access token refreshed successfully",
+    accessToken,
+  });
+};
 
 const forgottenPassword = async(req,res) => {
         const { businessId, email } = req.body;
@@ -317,4 +349,4 @@ const resendOTP = async(req,res) => {
     res.status(200).json({ message: "Check your email for OTP" });
 };
 
-export { registerBusinessOwner, forgottenPassword, verifyOTP, loginUser, loginOwner, logoutUser, resetPassword, resendOTP };
+export { registerBusinessOwner, forgottenPassword, verifyOTP, loginUser, loginOwner, logoutUser, refreshToken, resetPassword, resendOTP };

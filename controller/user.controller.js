@@ -48,11 +48,22 @@ const addStaff = async (req, res) =>{
 }
 
 const getAllUsers = async (req, res) =>{
-        const { businessId } = req.params;
-        if (businessId !== req.user.businessId.toString()){
-            throw new AppError("You are not allowed to view users of this business",403)
+        const businessId = req.user.businessId;
+        const { role, isActive, search } = req.query;
+        const filter = { businessId };
+        if (role) {
+            filter.role = role;
         }
-
+        if (isActive !== undefined) {
+            filter.isActive = isActive === "true";
+        }
+        if (search) {
+            filter.$or = [
+                { firstName: { $regex: search, $options: "i" } },
+                { lastName: { $regex: search, $options: "i" } },
+                { email: { $regex: search, $options: "i" } }
+            ];
+        }
         const business = await Business.findById(businessId);
         if (!business){
             throw new AppError("Business not found",404)
@@ -60,7 +71,7 @@ const getAllUsers = async (req, res) =>{
         if (!["owner","admin"].includes(req.user.role)){
             throw new AppError("You are not allowed to perform this action",403)
         }
-        const users = await User.find({businessId}).select('firstName lastName email role');
+        const users = await User.find(filter).select('firstName lastName email role');
         res.status(200).json({
             success: true,
             users,

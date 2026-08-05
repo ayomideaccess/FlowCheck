@@ -26,7 +26,16 @@ const addSupplier = async(req, res) => {
 
 const getAllSuppliers = async(req, res) => {
     const businessId = req.user.businessId;
-    const suppliers = await Supplier.find({businessId}).select('name contactPerson phone email address');
+    const { search } = req.query;
+    const filter = { businessId };
+    if (search) {
+        filter.$or = [
+            { name: { $regex: search, $options: "i" } },
+            { contactPerson: { $regex: search, $options: "i" } },
+            { email: { $regex: search, $options: "i" } }
+        ];
+    }
+    const suppliers = await Supplier.find(filter).select('name contactPerson phone email address');
     res.status(200).json(suppliers);
 }
 
