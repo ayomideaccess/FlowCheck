@@ -26,7 +26,7 @@ const addSupplier = async(req, res) => {
 
 const getAllSuppliers = async(req, res) => {
     const businessId = req.user.businessId;
-    const { search } = req.query;
+    const { search, sortBy, order, page=1, limit=5 } = req.query;
     const filter = { businessId };
     if (search) {
         filter.$or = [
@@ -35,7 +35,19 @@ const getAllSuppliers = async(req, res) => {
             { email: { $regex: search, $options: "i" } }
         ];
     }
-    const suppliers = await Supplier.find(filter).select('name contactPerson phone email address');
+    const allowedSortField = ['name', 'contactPerson', 'email'];
+    const sort = {};
+    if (sortBy && allowedSortField.includes(sortBy)) {
+        sort[sortBy] = order === 'desc' ? -1 : 1;
+    } else {
+        sort.name = 1;
+    }
+    const skip = (Number(page) - 1) * Number(limit);
+    const suppliers = await Supplier.find(filter)
+    .select('name contactPerson phone email address')
+    .sort(sort)
+    .skip(skip)
+    .limit(Number(limit));
     res.status(200).json(suppliers);
 }
 

@@ -33,7 +33,7 @@ const addProduct = async(req, res) => {
 
 const getAllProducts = async(req, res) => {
     const businessId = req.user.businessId;
-    const { categoryId, isActive, minPrice, maxPrice } = req.query;
+    const { categoryId, isActive, minPrice, maxPrice, sortBy, order, page=1, limit=5 } = req.query;
 
     const filter = { businessId };
     if (categoryId) filter.categoryId = categoryId;
@@ -44,7 +44,23 @@ const getAllProducts = async(req, res) => {
         if (maxPrice !== undefined) filter.unitPrice.$lte = Number(maxPrice);
     }
 
-    const products = await Product.find(filter).select('name unitPrice costPrice currentStock reorderLevel unit');
+    const allowedSortFields = ['name', 'unitPrice', "costPrice", "currentStock"];
+
+    const sort = {};
+    if (sortBy && allowedSortFields.includes(sortBy)) {
+        sort[sortBy] = order === 'desc' ? -1 : 1;
+    } else {
+        sort.name = 1;
+    }
+
+    const skip = (Number(page) - 1) * Number(limit);
+
+
+    const products = await Product.find(filter)
+    .select('name unitPrice costPrice currentStock reorderLevel unit')
+    .sort(sort)
+    .skip(skip)
+    .limit(Number(limit));
 
     res.status(200).json(products);
 }

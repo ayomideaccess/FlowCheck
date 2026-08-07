@@ -88,7 +88,7 @@ const createSale = async (req, res) => {
 
 const getAllSales = async (req, res) => {
     const businessId = req.user.businessId;
-    const { soldBy, minAmount, maxAmount, startDate, endDate } = req.query;
+    const { soldBy, minAmount, maxAmount, startDate, endDate, sortBy, order, page=1, limit =5 } = req.query;
     const filter = { businessId };
 
     if (soldBy) filter.soldBy = soldBy;
@@ -102,9 +102,19 @@ const getAllSales = async (req, res) => {
         if (startDate) filter.createdAt.$gte = new Date(startDate);
         if (endDate) filter.createdAt.$lte = new Date(endDate);
     }
+    const allowedSortField = ['totalAmount', 'createdAt'];
+    const sort = {};
+    if (sortBy && allowedSortField.includes(sortBy)) {
+        sort[sortBy] = order === 'desc' ? -1 : 1;
+    } else {
+        sort.createdAt = -1;
+    }
+    const skip = (Number(page) - 1) * Number(limit);
     const sales = await Sale.find(filter)
     .populate("soldBy", "firstName lastName")
-    .sort({ createdAt: -1 });
+    .sort(sort)
+    .skip(skip)
+    .limit(Number(limit));
 
     res.status(200).json(sales);
 };

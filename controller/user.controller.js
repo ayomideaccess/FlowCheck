@@ -49,7 +49,7 @@ const addStaff = async (req, res) =>{
 
 const getAllUsers = async (req, res) =>{
         const businessId = req.user.businessId;
-        const { role, isActive, search } = req.query;
+        const { role, isActive, search, sortBy, order, page=1, limit=5 } = req.query;
         const filter = { businessId };
         if (role) {
             filter.role = role;
@@ -71,7 +71,20 @@ const getAllUsers = async (req, res) =>{
         if (!["owner","admin"].includes(req.user.role)){
             throw new AppError("You are not allowed to perform this action",403)
         }
-        const users = await User.find(filter).select('firstName lastName email role');
+        const allowedSortField = ['firstName', 'lastName', 'role'];
+        const sort = {};
+        if (sortBy && allowedSortField.includes(sortBy)) {
+            sort[sortBy] = order === 'desc' ? -1 : 1;
+        } else {
+            sort.firstName = 1;
+        }
+        const skip = (Number(page) - 1) * Number(limit);
+        const users = await User.find(filter)
+        .select('firstName lastName email role')
+        .sort(sort)
+        .skip(skip)
+        .limit(Number(limit));
+        
         res.status(200).json({
             success: true,
             users,

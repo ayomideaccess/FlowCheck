@@ -18,14 +18,26 @@ const addCategory = async(req, res) =>{
 
 const getAllCategories = async(req, res) =>{
         const businessId = req.user.businessId;
-        const { search } = req.query;
+        const { search, sortBy, order, page=1, limit=5 } = req.query;
         const filter = { businessId };
         if (search) {
             filter.$or = [
                 { name: { $regex: search, $options: "i" } }
             ];
         }
-        const categories = await Category.find(filter).select('name description');
+        const allowedSortField = ['name'];
+        const sort = {};
+        if (sortBy && allowedSortField.includes(sortBy)) {
+            sort[sortBy] = order === 'desc' ? -1 : 1;
+        } else {
+            sort.name = 1;
+        }
+        const skip = (Number(page) - 1) * Number(limit);
+        const categories = await Category.find(filter)
+        .select('name description')
+        .sort(sort)
+        .skip(skip)
+        .limit(Number(limit));
         res.status(200).json(categories);
 }
 
