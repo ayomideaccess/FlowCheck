@@ -2,6 +2,8 @@ import express from 'express';
 import { addProduct, getAllProducts, getProductById, updateProduct, deleteProduct} from '../controller/product.controller.js';
 import { protect } from '../middleware/protect.js';
 import { authorize } from '../middleware/authorize.js';
+import { productQuerySchema } from '../validators/query.validator.js';
+import validate from '../middleware/validate.js';
 
 const router = express.Router();
 
@@ -57,7 +59,7 @@ router.post('/product', protect, authorize("owner","admin","manager"), addProduc
 
 /**
  * @swagger
- * /products:
+ * /products/:
  *   get:
  *     summary: Get all products
  *     description: Retrieves all products belonging to the authenticated business.
@@ -65,6 +67,70 @@ router.post('/product', protect, authorize("owner","admin","manager"), addProduc
  *       - Products
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: categoryId
+ *         required: false
+ *         schema:
+ *           type: string
+ *         description: Filter products by category ID
+ * 
+ *       - in: query
+ *         name: isActive
+ *         required: false
+ *         schema:
+ *           type: boolean
+ *         description: Filter products by active status
+ * 
+ *       - in: query
+ *         name: minPrice
+ *         required: false
+ *         schema:
+ *           type: number
+ *         description: Filter products by minimum price
+ * 
+ *       - in: query
+ *         name: maxPrice
+ *         required: false
+ *         schema:
+ *           type: number
+ *         description: Filter products by maximum price
+ * 
+ *       - in: query
+ *         name: sortBy
+ *         required: false
+ *         schema:
+ *           type: string
+ *           enum: [name, unitPrice, costPrice, currentStock]
+ *         description: Fields to sort products by
+ * 
+ *       - in: query
+ *         name: order
+ *         required: false
+ *         schema:
+ *           type: string
+ *           enum: [asc, desc]
+ *         description: Sort order (ascending or descending)
+ * 
+ *       - in: query
+ *         name: page
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 1
+ *         description: Page Number
+ * 
+ *       - in: query
+ *         name: limit
+ *         required: false
+ *         schema: 
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 100
+ *           default: 5
+ *         description: Number of products per page
+ * 
  *     responses:
  *       200:
  *         description: Products retrieved successfully
@@ -75,7 +141,7 @@ router.post('/product', protect, authorize("owner","admin","manager"), addProduc
  *       500:
  *         description: Internal server error
  */
-router.get('/', protect, authorize("owner","admin","manager","sales-attendant"), getAllProducts);
+router.get('/', protect, authorize("owner","admin","manager","sales-attendant"), validate(productQuerySchema, "query"), getAllProducts);
 
 /**
  * @swagger

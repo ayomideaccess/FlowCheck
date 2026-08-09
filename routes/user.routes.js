@@ -2,6 +2,8 @@ import express from 'express';
 import { addStaff, getAllUsers, updateUserById, deleteUser } from '../controller/user.controller.js';
 import { protect } from '../middleware/protect.js';
 import { authorize } from '../middleware/authorize.js';
+import validate from '../middleware/validate.js';
+import { userQuerySchema } from '../validators/query.validator.js';
 
 const router = express.Router();
 
@@ -64,34 +66,84 @@ const router = express.Router();
  */
 router.post('/:businessId/users', protect, authorize("owner","admin"), addStaff);
 
-/**
+ /**
  * @swagger
  * /users:
  *   get:
- *     summary: Get all staff
- *     description: Retrieves all staff members belonging to a business.
- *     tags:
- *       - Users
+ *     summary: Get all users
+ *     tags: [Users]
  *     security:
  *       - bearerAuth: []
  *     parameters:
- *       - in: path
- *         name: businessId
- *         required: true
+ *       - in: query
+ *         name: role
+ *         required: false
  *         schema:
  *           type: string
- *         description: Business ID
+ *           enum: [admin, manager, sales-attendant]
+ *         description: Filter users by role
+ *
+ *       - in: query
+ *         name: isActive
+ *         required: false
+ *         schema:
+ *           type: string
+ *           enum: [true, false]
+ *         description: Filter users by active status
+ *
+ *       - in: query
+ *         name: search
+ *         required: false
+ *         schema:
+ *           type: string
+ *         description: Search users by first name, last name, or email
+ *
+ *       - in: query
+ *         name: sortBy
+ *         required: false
+ *         schema:
+ *           type: string
+ *           enum: [firstName, lastName, role]
+ *         description: Field to sort users by
+ *
+ *       - in: query
+ *         name: order
+ *         required: false
+ *         schema:
+ *           type: string
+ *           enum: [asc, desc]
+ *         description: Sort order
+ *
+ *       - in: query
+ *         name: page
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 1
+ *         description: Page number
+ *
+ *       - in: query
+ *         name: limit
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 100
+ *           default: 10
+ *         description: Number of users per page
+ *
  *     responses:
  *       200:
  *         description: Users retrieved successfully
+ *       400:
+ *         description: Invalid query parameters
  *       401:
  *         description: Unauthorized
  *       403:
  *         description: Forbidden
- *       500:
- *         description: Internal server error
  */
-router.get('/users', protect, authorize("owner","admin"), getAllUsers);
+router.get('/users', protect, authorize("owner","admin"), validate(userQuerySchema, "query"), getAllUsers);
 
 /**
  * @swagger

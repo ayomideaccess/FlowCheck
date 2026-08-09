@@ -1,6 +1,8 @@
 import express from 'express';
 import { createSale, getAllSales, getSaleById } from '../controller/sales.controller.js';
 import { protect } from '../middleware/protect.js';
+import validate from '../middleware/validate.js';
+import { salesQuerySchema } from '../validators/query.validator.js';
 
 const router = express.Router();
 
@@ -62,22 +64,93 @@ router.post('/', protect, createSale);
  * /sales:
  *   get:
  *     summary: Get all sales
- *     description: Retrieves all sales transactions for the authenticated business.
- *     tags:
- *       - Sales
+ *     tags: [Sales]
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: soldBy
+ *         required: false
+ *         schema:
+ *           type: string
+ *         description: Filter sales by the staff member who made the sale
+ *
+ *       - in: query
+ *         name: minAmount
+ *         required: false
+ *         schema:
+ *           type: number
+ *           minimum: 0
+ *         description: Minimum sale amount
+ *
+ *       - in: query
+ *         name: maxAmount
+ *         required: false
+ *         schema:
+ *           type: number
+ *           minimum: 0
+ *         description: Maximum sale amount
+ *
+ *       - in: query
+ *         name: startDate
+ *         required: false
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: Start date for filtering sales
+ *
+ *       - in: query
+ *         name: endDate
+ *         required: false
+ *         schema:
+ *           type: string
+ *           format: date
+ *         description: End date for filtering sales
+ *
+ *       - in: query
+ *         name: sortBy
+ *         required: false
+ *         schema:
+ *           type: string
+ *           enum: [createdAt, totalAmount]
+ *         description: Field to sort sales by
+ *
+ *       - in: query
+ *         name: order
+ *         required: false
+ *         schema:
+ *           type: string
+ *           enum: [asc, desc]
+ *         description: Sort order
+ *
+ *       - in: query
+ *         name: page
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 1
+ *         description: Page number
+ *
+ *       - in: query
+ *         name: limit
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 100
+ *           default: 10
+ *         description: Number of sales per page
+ *
  *     responses:
  *       200:
  *         description: Sales retrieved successfully
+ *       400:
+ *         description: Invalid query parameters
  *       401:
  *         description: Unauthorized
- *       403:
- *         description: Forbidden
- *       500:
- *         description: Internal server error
  */
-router.get('/', protect, getAllSales);
+router.get('/', protect, validate(salesQuerySchema, "query"), getAllSales);
 
 /**
  * @swagger

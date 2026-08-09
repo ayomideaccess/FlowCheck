@@ -15,6 +15,7 @@ import reportRoutes from './routes/report.routes.js';
 import errorHandler from './middleware/errorHandler.js';
 import routeHandler from './middleware/routeHandler.js';
 import { swaggerUi, swaggerSpec } from './config/swagger.js';
+import cookieParser from 'cookie-parser';
 
 const app = express();
 

@@ -1,9 +1,14 @@
 import { success, ZodError } from "zod";
 
-const validate = (schema) => {
+const validate = (schema, source = "body" ) => {
     return (req, res, next) =>{
         try {
-            schema.parse(req.body);
+            const result = schema.parse(req[source]);
+            if (source === "query") {
+                req.validatedQuery = result;
+            } else {
+                req[source] = result;
+            }
             next();
         } catch (error) {
             if (error instanceof ZodError) {

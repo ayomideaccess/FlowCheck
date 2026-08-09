@@ -2,6 +2,8 @@ import express from 'express';
 import { addSupplier, getAllSuppliers, getSupplierById, updateSupplier, deleteSupplier } from '../controller/supplier.controller.js';
 import { protect } from '../middleware/protect.js';
 import { authorize } from '../middleware/authorize.js';
+import { supplierQuerySchema } from '../validators/query.validator.js';
+import validate from '../middleware/validate.js';
 
 const router = express.Router();
 
@@ -65,22 +67,61 @@ router.post('/', protect, authorize("owner", "admin", "manager"), addSupplier);
  * /suppliers:
  *   get:
  *     summary: Get all suppliers
- *     description: Retrieves all suppliers belonging to the authenticated business.
- *     tags:
- *       - Suppliers
+ *     tags: [Suppliers]
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: search
+ *         required: false
+ *         schema:
+ *           type: string
+ *         description: Search suppliers by name, contact person, or email
+ *
+ *       - in: query
+ *         name: sortBy
+ *         required: false
+ *         schema:
+ *           type: string
+ *           enum: [name, contactPerson, email]
+ *         description: Field to sort suppliers by
+ *
+ *       - in: query
+ *         name: order
+ *         required: false
+ *         schema:
+ *           type: string
+ *           enum: [asc, desc]
+ *         description: Sort order
+ *
+ *       - in: query
+ *         name: page
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 1
+ *         description: Page number
+ *
+ *       - in: query
+ *         name: limit
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 100
+ *           default: 10
+ *         description: Number of suppliers per page
+ *
  *     responses:
  *       200:
  *         description: Suppliers retrieved successfully
+ *       400:
+ *         description: Invalid query parameters
  *       401:
  *         description: Unauthorized
- *       403:
- *         description: Forbidden
- *       500:
- *         description: Internal server error
  */
-router.get('/', protect, authorize("owner", "admin", "manager", "sales-attendant"),getAllSuppliers);
+router.get('/', protect, authorize("owner", "admin", "manager", "sales-attendant"), validate(supplierQuerySchema,"query"), getAllSuppliers);
 
 /**
  * @swagger

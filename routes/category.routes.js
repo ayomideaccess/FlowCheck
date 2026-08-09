@@ -2,6 +2,8 @@ import express from 'express';
 import { addCategory, getAllCategories, updateCategory, deleteCategory } from '../controller/category.controller.js';
 import { protect } from '../middleware/protect.js';
 import { authorize } from '../middleware/authorize.js';
+import validate from '../middleware/validate.js';
+import {  categoryQuerySchema } from '../validators/query.validator.js';
 
 const router = express.Router();
 
@@ -50,30 +52,66 @@ const router = express.Router();
 router.post('/category', protect, authorize("owner","admin","manager"), addCategory);
 
 
-// router.post('/category', protect, authorize("owner","admin","manager"), addCategory);
-
 /**
  * @swagger
  * /categories:
  *   get:
  *     summary: Get all categories
- *     description: Retrieves all categories belonging to the authenticated business.
- *     tags:
- *       - Categories
+ *     tags: [Categories]
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: search
+ *         required: false
+ *         schema:
+ *           type: string
+ *         description: Search categories by name
+ *
+ *       - in: query
+ *         name: sortBy
+ *         required: false
+ *         schema:
+ *           type: string
+ *           enum: [name]
+ *         description: Field to sort categories by
+ *
+ *       - in: query
+ *         name: order
+ *         required: false
+ *         schema:
+ *           type: string
+ *           enum: [asc, desc]
+ *         description: Sort order
+ *
+ *       - in: query
+ *         name: page
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 1
+ *         description: Page number
+ *
+ *       - in: query
+ *         name: limit
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 100
+ *           default: 10
+ *         description: Number of categories per page
+ *
  *     responses:
  *       200:
  *         description: Categories retrieved successfully
+ *       400:
+ *         description: Invalid query parameters
  *       401:
  *         description: Unauthorized
- *       403:
- *         description: Forbidden
- *       500:
- *         description: Internal server error
  */
-// router.get('/categories', protect, authorize("owner","admin","manager","sales-attendant"), getAllCategories);
-router.get('/categories', protect, authorize("owner","admin","manager","sales-attendant"), getAllCategories);
+router.get('/categories', protect, authorize("owner","admin","manager","sales-attendant"), validate(categoryQuerySchema, "query"), getAllCategories);
 
 /**
  * @swagger
