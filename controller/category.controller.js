@@ -39,6 +39,7 @@ const getAllCategories = async(req, res) =>{
         .skip(skip)
         .limit(Number(limit));
         res.status(200).json(categories);
+
 }
 
 const updateCategory = async(req, res)=>{

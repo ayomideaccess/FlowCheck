@@ -21,4 +21,5 @@ const alertSchema = new Schema({
     }
 })
 
+alertSchema.index({ businessId: 1, alertType: 1, isResolved: 1 });
 export default mongoose.model("Alert", alertSchema);

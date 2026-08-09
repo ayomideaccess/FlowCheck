@@ -19,7 +19,6 @@ const userSchema = new Schema({
     email:{
         type: String,
         required: true,
-        unique: true,
         lowercase: true,
         trim: true,
         validate: {
@@ -48,6 +47,10 @@ const userSchema = new Schema({
     isVerified:{
         type: Boolean,
         default: false
+    },
+    isActive: {
+        type: Boolean,
+        default: false
     }
 }, {
     timestamps: true
@@ -56,5 +59,10 @@ const userSchema = new Schema({
 userSchema.methods.comparePassword = async function(password){
     return await bcrypt.compare(password, this.password);
 };
+
+userSchema.index({ businessId: 1, email: 1 }, { unique: true });
+userSchema.index({ businessId: 1, firstName: 1 });
+userSchema.index({ businessId: 1, role: 1 });
+userSchema.index({ businessId: 1, isActive: 1 });
 
 export default mongoose.model("User", userSchema);

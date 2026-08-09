@@ -16,7 +16,7 @@ const productSchema = new Schema({
     SKU:{
         type: String,
         required: true,
-        unique: true
+        trim: true
     },
     categoryId:{
         type: mongoose.Schema.Types.ObjectId,
@@ -67,4 +67,8 @@ productSchema.pre('save', async function(){
     }
 });
 
+productSchema.index({ businessId: 1, name: 1 });
+productSchema.index({ businessId: 1, categoryId: 1, unitPrice: 1 });
+productSchema.index({ businessId: 1, isActive: 1 });
+productSchema.index({ businessId: 1, SKU: 1 }, { unique: true });
 export default mongoose.model('Product', productSchema);

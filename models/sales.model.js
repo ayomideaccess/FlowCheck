@@ -19,4 +19,8 @@ const saleSchema = new Schema({
     }
 }, { timestamps: true });
 
+
+saleSchema.index({ businessId: 1, createdAt: -1 });
+saleSchema.index({ businessId: 1, soldBy: 1, createdAt: -1 });
+saleSchema.index({ businessId: 1, totalAmount: 1 });
 export default mongoose.model("Sale", saleSchema);

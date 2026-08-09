@@ -45,4 +45,7 @@ const transactionSchema = new Schema({
     }
 }, { timestamps: true })
 
+transactionSchema.index({ businessId: 1, productId: 1, createdAt: -1 });
+transactionSchema.index({ businessId: 1, transactionType: 1, createdAt: -1 });
+
 export default mongoose.model("Transaction", transactionSchema);

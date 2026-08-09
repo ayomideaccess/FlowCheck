@@ -16,4 +16,6 @@ const categorySchema = new Schema({
     }
 });
 
+categorySchema.index({ businessId: 1, name: 1 });
+
 export default mongoose.model('Category', categorySchema);

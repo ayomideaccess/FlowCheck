@@ -31,7 +31,8 @@ const addStaff = async (req, res) =>{
             email,
             phoneNo,
             role,
-            isVerified: true
+            isVerified: true,
+            isActive: true
         });
 
         await sendUserEmail(email, firstName, role, business.businessName);

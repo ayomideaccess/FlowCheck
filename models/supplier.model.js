@@ -34,4 +34,6 @@ const supplierSchema = new Schema({
     }
 })
 
+supplierSchema.index({ businessId: 1, name: 1, email: 1 });
+
 export default mongoose.model("Supplier", supplierSchema);

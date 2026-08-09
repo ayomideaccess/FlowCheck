@@ -35,4 +35,8 @@ const saleItemSchema = new Schema({
     }
 }, { timestamps: true });
 
+
+saleItemSchema.index({ saleId: 1 });
+saleItemSchema.index({ businessId: 1, productId: 1 });
+
 export default mongoose.model('SaleItem', saleItemSchema);
