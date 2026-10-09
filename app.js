@@ -16,11 +16,13 @@ import errorHandler from './middleware/errorHandler.js';
 import routeHandler from './middleware/routeHandler.js';
 import { swaggerUi, swaggerSpec } from './config/swagger.js';
 import cookieParser from 'cookie-parser';
+import { generalLimiter, authLimiter } from './middleware/rateLimiter.js';
 
 const app = express();
 
 app.use(express.json());
 app.use(cors());
+app.use(generalLimiter);
 app.use(cookieParser());
 
 // Connect to MongoDB
@@ -43,7 +45,7 @@ startConnection();
 
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
-app.use('/auth', authRoutes);
+app.use('/auth', authLimiter, authRoutes);
 app.use('/', userRoutes);
 app.use('/', categoryRoutes);
 app.use('/products', productRoutes);
